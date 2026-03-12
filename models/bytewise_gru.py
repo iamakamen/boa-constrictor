@@ -35,6 +35,8 @@ class BytewiseGRU(nn.Module):
             @torch.no_grad()
             def step(self, tokens):
                 # tensor shape (batch,)
+                if tokens.dim() == 2 and tokens.size(1) == 1:
+                    tokens = tokens.squeeze(1)
                 if tokens.dim() == 1:
                     tokens = tokens.unsqueeze(1)  # -> (batch, 1)
                 tokens = tokens.to(self.h.device)
@@ -42,4 +44,20 @@ class BytewiseGRU(nn.Module):
                 return logits.squeeze(1)
 
         return _Stream(model, h0)
+
+    def step(self, prev_tokens, stream):
+        # normalize prev_tokens to shape (batch,)
+        if prev_tokens.dim() == 2 and prev_tokens.size(1) == 1:
+            prev = prev_tokens.squeeze(1)
+        else:
+            prev = prev_tokens
+
+        if stream is not None and hasattr(stream, "step"):
+            return stream.step(prev)
+        else:
+            # fallback: run a single-step forward using model.forward
+            tokens = prev.unsqueeze(1).to(next(self.parameters()).device)
+            with torch.no_grad():
+                logits, _ = self.forward(tokens, hidden=None)
+            return logits.squeeze(1)
 
