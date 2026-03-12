@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 
-from models.bytewise_gru import BytewiseGRU
+from model.bytewise_gru import BytewiseGRU
 
 def BoaConstrictor(d_model=256, num_layers=4, vocab_size=256, device="cuda", backbone="mamba"):
     """ Construct a BoaBytePredictor with smaller model size for Boa experiments. """
