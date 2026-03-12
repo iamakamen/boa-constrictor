@@ -244,7 +244,14 @@ def main():
     exp_dir.mkdir(parents=True, exist_ok=True)
 
     # Setup model, dataloaders, optimizer, loss
-    model = BoaConstrictor(d_model=d_model, num_layers=num_layers, vocab_size=vocab_size, device=device, backbone=getattr(cfg.model, "backbone", "mamba"))
+    model_backbone = None
+    if isinstance(config.get('model', None), dict):
+        model_backbone = config['model'].get('backbone', None)
+
+    if model_backbone is None:
+        model_backbone = "mamba"
+    
+    model = BoaConstrictor(d_model=d_model, num_layers=num_layers, vocab_size=vocab_size, device=device, backbone=model_backbone)
 
     dataloader = ByteDataloader(data_bytes, seq_len=seq_len, batch_size=batch_size, device=device)
 
