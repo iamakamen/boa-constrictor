@@ -17,3 +17,29 @@ class BytewiseGRU(nn.Module):
         logits = self.fc(out)
         return logits, h
 
+    def init_stream(self, max_len: int, batch_size: int, device, dtype: torch.dtype):
+        device = torch.device(device)
+        if dtype not in (torch.float16, torch.float32, torch.float64):
+            dtype = torch.float32
+
+        h0 = torch.zeros(self.gru.num_layers, batch_size, self.gru.hidden_size,
+                         device=device, dtype=dtype)
+
+        model = self
+
+        class _Stream:
+            def __init__(self, model, h):
+                self.model = model
+                self.h = h
+
+            @torch.no_grad()
+            def step(self, tokens):
+                # tensor shape (batch,)
+                if tokens.dim() == 1:
+                    tokens = tokens.unsqueeze(1)  # -> (batch, 1)
+                tokens = tokens.to(self.h.device)
+                logits, self.h = self.model(tokens, hidden=self.h)
+                return logits.squeeze(1)
+
+        return _Stream(model, h0)
+
