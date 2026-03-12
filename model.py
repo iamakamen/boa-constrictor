@@ -2,14 +2,8 @@ import torch
 import torch.nn as nn
 import numpy as np
 
-from models.bytewise_gru import BytewiseGRU
-
 def BoaConstrictor(d_model=256, num_layers=4, vocab_size=256, device="cuda", backbone="mamba"):
     """ Construct a BoaBytePredictor with smaller model size for Boa experiments. """
-    if backbone == "gru":
-        model = BytewiseGRU(embed_dim=d_model, hidden_dim=d_model, num_layers=num_layers)
-        return model
-
     IS_CUDA = torch.cuda.is_available() and device == "cuda"
 
     if IS_CUDA:
